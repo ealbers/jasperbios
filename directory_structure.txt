@@ -1,0 +1,305 @@
+Folder PATH listing for volume OS
+Volume serial number is 00000080 9AA9:718C
+C:.
+¦   .gitignore
+¦   COPYING
+¦   COPYING.LESSER
+¦   directory_structure.txt
+¦   Makefile
+¦   README
+¦   
++---.vscode
+¦       settings.json
+¦       
++---docs
+¦       Build_overview.md
+¦       Contributing.md
+¦       Debugging.md
+¦       developer-certificate-of-origin
+¦       Developer_Documentation.md
+¦       Developer_links.md
+¦       Download.md
+¦       Execution_and_code_flow.md
+¦       Linking_overview.md
+¦       Mailinglist.md
+¦       Memory_Model.md
+¦       README
+¦       Releases.md
+¦       Runtime_config.md
+¦       SeaBIOS.md
+¦       SeaVGABIOS.md
+¦       
++---scripts
+¦   ¦   acpi_extract.py
+¦   ¦   acpi_extract_preprocess.py
+¦   ¦   buildrom.py
+¦   ¦   buildversion.py
+¦   ¦   checkrom.py
+¦   ¦   checkstack.py
+¦   ¦   checksum.py
+¦   ¦   encodeint.py
+¦   ¦   gen-offsets.sh
+¦   ¦   layoutrom.py
+¦   ¦   ldnoexec.py
+¦   ¦   readserial.py
+¦   ¦   tarball.sh
+¦   ¦   test-build.sh
+¦   ¦   transdump.py
+¦   ¦   vgafixup.py
+¦   ¦   
+¦   +---kconfig
+¦       ¦   .gitignore
+¦       ¦   check.sh
+¦       ¦   conf.c
+¦       ¦   confdata.c
+¦       ¦   expr.c
+¦       ¦   expr.h
+¦       ¦   gconf.c
+¦       ¦   gconf.glade
+¦       ¦   images.c
+¦       ¦   kxgettext.c
+¦       ¦   lex.zconf.c
+¦       ¦   list.h
+¦       ¦   lkc.h
+¦       ¦   lkc_proto.h
+¦       ¦   Makefile
+¦       ¦   mconf.c
+¦       ¦   menu.c
+¦       ¦   merge_config.sh
+¦       ¦   nconf.c
+¦       ¦   nconf.gui.c
+¦       ¦   nconf.h
+¦       ¦   POTFILES.in
+¦       ¦   qconf.cc
+¦       ¦   qconf.h
+¦       ¦   streamline_config.pl
+¦       ¦   symbol.c
+¦       ¦   util.c
+¦       ¦   zconf.gperf
+¦       ¦   zconf.hash.c_shipped
+¦       ¦   zconf.l
+¦       ¦   zconf.lex.c_shipped
+¦       ¦   zconf.tab.c_shipped
+¦       ¦   zconf.y
+¦       ¦   
+¦       +---lxdialog
+¦               .gitignore
+¦               BIG.FAT.WARNING
+¦               check-lxdialog.sh
+¦               checklist.c
+¦               dialog.h
+¦               inputbox.c
+¦               menubox.c
+¦               textbox.c
+¦               util.c
+¦               yesno.c
+¦               
++---src
+¦   ¦   apm.c
+¦   ¦   asm-offsets.c
+¦   ¦   biosvar.h
+¦   ¦   block.c
+¦   ¦   block.h
+¦   ¦   bmp.c
+¦   ¦   boot.c
+¦   ¦   bootsplash.c
+¦   ¦   bregs.h
+¦   ¦   byteorder.h
+¦   ¦   cdrom.c
+¦   ¦   clock.c
+¦   ¦   code16gcc.s
+¦   ¦   config.h
+¦   ¦   cp437.c
+¦   ¦   cp437.h
+¦   ¦   disk.c
+¦   ¦   e820map.c
+¦   ¦   e820map.h
+¦   ¦   entryfuncs.S
+¦   ¦   farptr.h
+¦   ¦   font.c
+¦   ¦   gen-defs.h
+¦   ¦   jpeg.c
+¦   ¦   kbd.c
+¦   ¦   Kconfig
+¦   ¦   list.h
+¦   ¦   malloc.c
+¦   ¦   malloc.h
+¦   ¦   memmap.h
+¦   ¦   misc.c
+¦   ¦   mouse.c
+¦   ¦   optionroms.c
+¦   ¦   output.c
+¦   ¦   output.h
+¦   ¦   pcibios.c
+¦   ¦   pmm.c
+¦   ¦   pnpbios.c
+¦   ¦   post.c
+¦   ¦   resume.c
+¦   ¦   romfile.c
+¦   ¦   romfile.h
+¦   ¦   romlayout.S
+¦   ¦   sercon.c
+¦   ¦   serial.c
+¦   ¦   sha.h
+¦   ¦   sha1.c
+¦   ¦   sha256.c
+¦   ¦   sha512.c
+¦   ¦   stacks.c
+¦   ¦   stacks.h
+¦   ¦   string.c
+¦   ¦   string.h
+¦   ¦   system.c
+¦   ¦   tcgbios.c
+¦   ¦   tcgbios.h
+¦   ¦   types.h
+¦   ¦   util.h
+¦   ¦   version.c
+¦   ¦   vgahooks.c
+¦   ¦   x86.c
+¦   ¦   x86.h
+¦   ¦   
+¦   +---fw
+¦   ¦       acpi.c
+¦   ¦       biostables.c
+¦   ¦       coreboot.c
+¦   ¦       csm.c
+¦   ¦       dev-pci.h
+¦   ¦       dev-piix.h
+¦   ¦       dev-q35.h
+¦   ¦       dsdt_parser.c
+¦   ¦       lzmadecode.c
+¦   ¦       lzmadecode.h
+¦   ¦       mptable.c
+¦   ¦       mtrr.c
+¦   ¦       multiboot.c
+¦   ¦       paravirt.c
+¦   ¦       paravirt.h
+¦   ¦       pciinit.c
+¦   ¦       pirtable.c
+¦   ¦       romfile_loader.c
+¦   ¦       romfile_loader.h
+¦   ¦       shadow.c
+¦   ¦       smbios.c
+¦   ¦       smm.c
+¦   ¦       smp.c
+¦   ¦       xen.c
+¦   ¦       xen.h
+¦   ¦       
+¦   +---hw
+¦   ¦       ahci.c
+¦   ¦       ahci.h
+¦   ¦       ata.c
+¦   ¦       ata.h
+¦   ¦       blockcmd.c
+¦   ¦       blockcmd.h
+¦   ¦       dma.c
+¦   ¦       esp-scsi.c
+¦   ¦       esp-scsi.h
+¦   ¦       floppy.c
+¦   ¦       lsi-scsi.c
+¦   ¦       lsi-scsi.h
+¦   ¦       megasas.c
+¦   ¦       megasas.h
+¦   ¦       mpt-scsi.c
+¦   ¦       mpt-scsi.h
+¦   ¦       nvme-int.h
+¦   ¦       nvme.c
+¦   ¦       nvme.h
+¦   ¦       pci.c
+¦   ¦       pci.h
+¦   ¦       pcidevice.c
+¦   ¦       pcidevice.h
+¦   ¦       pci_ids.h
+¦   ¦       pci_regs.h
+¦   ¦       pic.c
+¦   ¦       pic.h
+¦   ¦       ps2port.c
+¦   ¦       ps2port.h
+¦   ¦       pvscsi.c
+¦   ¦       pvscsi.h
+¦   ¦       ramdisk.c
+¦   ¦       rtc.c
+¦   ¦       rtc.h
+¦   ¦       sdcard.c
+¦   ¦       serialio.c
+¦   ¦       serialio.h
+¦   ¦       timer.c
+¦   ¦       tpm_drivers.c
+¦   ¦       tpm_drivers.h
+¦   ¦       usb-ehci.c
+¦   ¦       usb-ehci.h
+¦   ¦       usb-hid.c
+¦   ¦       usb-hid.h
+¦   ¦       usb-hub.c
+¦   ¦       usb-hub.h
+¦   ¦       usb-msc.c
+¦   ¦       usb-msc.h
+¦   ¦       usb-ohci.c
+¦   ¦       usb-ohci.h
+¦   ¦       usb-uas.c
+¦   ¦       usb-uas.h
+¦   ¦       usb-uhci.c
+¦   ¦       usb-uhci.h
+¦   ¦       usb-xhci.c
+¦   ¦       usb-xhci.h
+¦   ¦       usb.c
+¦   ¦       usb.h
+¦   ¦       virtio-blk.c
+¦   ¦       virtio-blk.h
+¦   ¦       virtio-mmio.c
+¦   ¦       virtio-mmio.h
+¦   ¦       virtio-pci.c
+¦   ¦       virtio-pci.h
+¦   ¦       virtio-ring.c
+¦   ¦       virtio-ring.h
+¦   ¦       virtio-scsi.c
+¦   ¦       virtio-scsi.h
+¦   ¦       
+¦   +---std
+¦           acpi.h
+¦           bda.h
+¦           disk.h
+¦           LegacyBios.h
+¦           mptable.h
+¦           multiboot.h
+¦           optionrom.h
+¦           pirtable.h
+¦           pmm.h
+¦           pnpbios.h
+¦           smbios.h
+¦           tcg.h
+¦           vbe.h
+¦           vga.h
+¦           
++---vgasrc
+        ati-tables.S
+        atiext.c
+        bochsdisplay.c
+        bochsvga.c
+        bochsvga.h
+        cbvga.c
+        clext.c
+        geodevga.c
+        geodevga.h
+        Kconfig
+        ramfb.c
+        stdvga.c
+        stdvga.h
+        stdvgaio.c
+        stdvgamodes.c
+        svgamodes.c
+        svgamodes.h
+        swcursor.c
+        vbe.c
+        vgabios.c
+        vgabios.h
+        vgaentry.S
+        vgafb.c
+        vgafb.h
+        vgafonts.c
+        vgahw.h
+        vgainit.c
+        vgalayout.lds.S
+        vgautil.h
+        vgaversion.c
+        
