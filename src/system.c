@@ -15,6 +15,16 @@
 #include "util.h" // handle_1553
 #include "x86.h" // set_a20
 
+#include "output.h" // Ensure correct macro usage
+
+void handle_155f(struct bregs *regs) { set_code_unimplemented(regs, 0x155f); }
+void handle_1553(struct bregs *regs) { set_code_unimplemented(regs, 0x1553); }
+void handle_157f(struct bregs *regs) { set_code_unimplemented(regs, 0x157f); }
+void handle_09(struct bregs *regs) { set_code_unimplemented(regs, 0x09); }
+void handle_0e(struct bregs *regs) { set_code_unimplemented(regs, 0x0e); }
+
+
+
 static void
 handle_152400(struct bregs *regs)
 {

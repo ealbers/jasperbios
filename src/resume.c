@@ -9,7 +9,6 @@
 #include "farptr.h" // FLATPTR_TO_SEGOFF
 #include "hw/pci.h" // pci_reboot
 #include "hw/pic.h" // pic_eoi2
-#include "hw/ps2port.h" // i8042_reboot
 #include "hw/rtc.h" // rtc_read
 #include "output.h" // dprintf
 #include "stacks.h" // farcall16big
@@ -130,9 +129,6 @@ tryReboot(void)
 
     // Reboot using ACPI RESET_REG
     acpi_reboot();
-
-    // Try keyboard controller reboot.
-    i8042_reboot();
 
     // Try PCI 0xcf9 reboot
     pci_reboot();

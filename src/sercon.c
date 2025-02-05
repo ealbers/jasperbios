@@ -14,6 +14,12 @@
 #include "hw/serialio.h" // SEROFF_IER
 #include "cp437.h"
 
+
+u16 cp437_to_unicode(u8 cp437) {
+    return cp437; // Stub function returning the same value for now
+}
+
+
 static u8 video_rows(void)
 {
     return GET_BDA(video_rows)+1;

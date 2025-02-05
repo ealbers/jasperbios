@@ -28,10 +28,10 @@
 #include "string.h" // checksum
 #include "util.h" // process_floppy_op
 
-u8 FloppyCount VARFSEG;
 u8 CDCount;
 struct drive_s *IDMap[3][BUILD_MAX_EXTDRIVE] VARFSEG;
 u8 *bounce_buf_fl VARFSEG;
+
 
 struct drive_s *
 getDrive(u8 exttype, u8 extdriveoffset)
@@ -278,26 +278,6 @@ map_cd_drive(struct drive_s *drive)
     add_drive(IDMap[EXTTYPE_CD], &CDCount, drive);
 }
 
-// Map a floppy
-void
-map_floppy_drive(struct drive_s *drive)
-{
-    ASSERT32FLAT();
-    dprintf(3, "Mapping floppy drive %p\n", drive);
-    add_drive(IDMap[EXTTYPE_FLOPPY], &FloppyCount, drive);
-
-    // Update equipment word bits for floppy
-    if (FloppyCount == 1) {
-        // 1 drive, ready for boot
-        set_equipment_flags(0x41, 0x01);
-        SET_BDA(floppy_harddisk_info, 0x07);
-    } else if (FloppyCount >= 2) {
-        // 2 drives, ready for boot
-        set_equipment_flags(0x41, 0x41);
-        SET_BDA(floppy_harddisk_info, 0x77);
-    }
-}
-
 
 /****************************************************************
  * Extended Disk Drive (EDD) get drive parameters
@@ -507,7 +487,6 @@ fill_edd(struct segoff_s edd, struct drive_s *drive_fl)
 void
 block_setup(void)
 {
-    floppy_setup();
     ata_setup();
     ahci_setup();
     sdcard_setup();
@@ -597,13 +576,12 @@ process_op_32(struct disk_op_s *op)
 }
 
 // Command dispatch for disk drivers that only run in 16bit mode
+// Command dispatch for disk drivers that only run in 16bit mode
 static int
 process_op_16(struct disk_op_s *op)
 {
     ASSERT16();
     switch (GET_FLATPTR(op->drive_fl->type)) {
-    case DTYPE_FLOPPY:
-        return floppy_process_op(op);
     case DTYPE_ATA:
         return ata_process_op(op);
     case DTYPE_RAMDISK:
@@ -614,6 +592,7 @@ process_op_16(struct disk_op_s *op)
         return process_op_both(op);
     }
 }
+
 
 // Execute a disk_op_s request.
 int

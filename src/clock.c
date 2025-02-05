@@ -8,7 +8,6 @@
 #include "biosvar.h" // SET_BDA
 #include "bregs.h" // struct bregs
 #include "hw/pic.h" // pic_eoi1
-#include "hw/ps2port.h" // ps2_check_event
 #include "hw/rtc.h" // rtc_read
 #include "hw/usb-hid.h" // usb_check_event
 #include "output.h" // debug_enter
@@ -20,6 +19,8 @@
 /****************************************************************
  * Init
  ****************************************************************/
+
+void _cfunc32flat_tpm_interrupt_handler32(void) { }
 
 static u32
 bcd2bin(u8 val)
@@ -294,7 +295,6 @@ clock_update(void)
     // Check for internal events.
     floppy_tick();
     usb_check_event();
-    ps2_check_event();
     sercon_check_event();
 }
 

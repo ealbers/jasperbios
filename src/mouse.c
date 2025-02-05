@@ -7,7 +7,6 @@
 
 #include "biosvar.h" // GET_EBDA
 #include "bregs.h" // struct bregs
-#include "hw/ps2port.h" // ps2_mouse_command
 #include "hw/usb-hid.h" // usb_mouse_command
 #include "output.h" // dprintf
 #include "stacks.h" // stack_hop_back
@@ -26,9 +25,9 @@ mouse_init(void)
 static int
 mouse_command(int command, u8 *param)
 {
-    if (usb_mouse_active())
+   
         return usb_mouse_command(command, param);
-    return ps2_mouse_command(command, param);
+    
 }
 
 #define RET_SUCCESS      0x00
@@ -42,29 +41,14 @@ mouse_command(int command, u8 *param)
 static void
 mouse_15c20000(struct bregs *regs)
 {
-    int ret = mouse_command(PSMOUSE_CMD_DISABLE, NULL);
-    if (ret)
-        set_code_invalid(regs, RET_ENEEDRESEND);
-    else
-        set_code_success(regs);
+    set_code_success(regs);
 }
 
 // Enable Mouse
 static void
 mouse_15c20001(struct bregs *regs)
 {
-    u16 ebda_seg = get_ebda_seg();
-    u8 mouse_flags_2 = GET_EBDA(ebda_seg, mouse_flag2);
-    if ((mouse_flags_2 & 0x80) == 0) {
-        set_code_invalid(regs, RET_ENOHANDLER);
-        return;
-    }
-
-    int ret = mouse_command(PSMOUSE_CMD_ENABLE, NULL);
-    if (ret)
-        set_code_invalid(regs, RET_ENEEDRESEND);
-    else
-        set_code_success(regs);
+    set_code_success(regs);
 }
 
 static void
@@ -88,14 +72,7 @@ mouse_15c200(struct bregs *regs)
 static void
 mouse_15c201(struct bregs *regs)
 {
-    u8 param[2];
-    int ret = mouse_command(PSMOUSE_CMD_RESET_BAT, param);
-    if (ret) {
-        set_code_invalid(regs, RET_ENEEDRESEND);
-        return;
-    }
-    regs->bl = param[0];
-    regs->bh = param[1];
+   
     set_code_success(regs);
 }
 
@@ -103,16 +80,7 @@ mouse_15c201(struct bregs *regs)
 static void
 mouse_15c202(struct bregs *regs)
 {
-    static u8 VAR16 sample_rates[7] = {10, 20, 40, 60, 80, 100, 200};
-    if (regs->bh >= ARRAY_SIZE(sample_rates)) {
-        set_code_invalid(regs, RET_EINVINPUT);
-        return;
-    }
-    u8 mouse_data1 = GET_GLOBAL(sample_rates[regs->bh]);
-    int ret = mouse_command(PSMOUSE_CMD_SETRATE, &mouse_data1);
-    if (ret)
-        set_code_invalid(regs, RET_ENEEDRESEND);
-    else
+    
         set_code_success(regs);
 }
 
@@ -120,20 +88,7 @@ mouse_15c202(struct bregs *regs)
 static void
 mouse_15c203(struct bregs *regs)
 {
-    // BH:
-    //      0 =  25 dpi, 1 count  per millimeter
-    //      1 =  50 dpi, 2 counts per millimeter
-    //      2 = 100 dpi, 4 counts per millimeter
-    //      3 = 200 dpi, 8 counts per millimeter
-    if (regs->bh >= 4) {
-        set_code_invalid(regs, RET_EINVINPUT);
-        return;
-    }
-    u8 param = regs->bh;
-    int ret = mouse_command(PSMOUSE_CMD_SETRES, &param);
-    if (ret)
-        set_code_invalid(regs, RET_ENEEDRESEND);
-    else
+    
         set_code_success(regs);
 }
 
@@ -141,13 +96,7 @@ mouse_15c203(struct bregs *regs)
 static void
 mouse_15c204(struct bregs *regs)
 {
-    u8 param[2];
-    int ret = mouse_command(PSMOUSE_CMD_GETID, param);
-    if (ret) {
-        set_code_invalid(regs, RET_ENEEDRESEND);
-        return;
-    }
-    regs->bh = param[0];
+   
     set_code_success(regs);
 }
 
@@ -155,15 +104,7 @@ mouse_15c204(struct bregs *regs)
 static void
 mouse_15c205(struct bregs *regs)
 {
-    if (regs->bh != 3) {
-        set_code_invalid(regs, RET_EINTERFACE);
-        return;
-    }
-    u16 ebda_seg = get_ebda_seg();
-    SET_EBDA(ebda_seg, mouse_flag1, 0x00);
-    SET_EBDA(ebda_seg, mouse_flag2, regs->bh);
-
-    // Reset Mouse
+    
     mouse_15c201(regs);
 }
 
@@ -171,15 +112,7 @@ mouse_15c205(struct bregs *regs)
 static void
 mouse_15c20600(struct bregs *regs)
 {
-    u8 param[3];
-    int ret = mouse_command(PSMOUSE_CMD_GETINFO, param);
-    if (ret) {
-        set_code_invalid(regs, RET_ENEEDRESEND);
-        return;
-    }
-    regs->bl = param[0];
-    regs->cl = param[1];
-    regs->dl = param[2];
+    
     set_code_success(regs);
 }
 
@@ -187,10 +120,7 @@ mouse_15c20600(struct bregs *regs)
 static void
 mouse_15c20601(struct bregs *regs)
 {
-    int ret = mouse_command(PSMOUSE_CMD_SETSCALE11, NULL);
-    if (ret)
-        set_code_invalid(regs, RET_ENEEDRESEND);
-    else
+    
         set_code_success(regs);
 }
 
@@ -198,10 +128,7 @@ mouse_15c20601(struct bregs *regs)
 static void
 mouse_15c20602(struct bregs *regs)
 {
-    int ret = mouse_command(PSMOUSE_CMD_SETSCALE21, NULL);
-    if (ret)
-        set_code_invalid(regs, RET_ENEEDRESEND);
-    else
+    
         set_code_success(regs);
 }
 
@@ -227,21 +154,7 @@ mouse_15c206(struct bregs *regs)
 static void
 mouse_15c207(struct bregs *regs)
 {
-    struct segoff_s farptr = SEGOFF(regs->es, regs->bx);
-    u16 ebda_seg = get_ebda_seg();
-    u8 mouse_flags_2 = GET_EBDA(ebda_seg, mouse_flag2);
-    if (! farptr.segoff) {
-        /* remove handler */
-        if ((mouse_flags_2 & 0x80) != 0) {
-            mouse_flags_2 &= ~0x80;
-            mouse_command(PSMOUSE_CMD_DISABLE, NULL);
-        }
-    } else {
-        /* install handler */
-        mouse_flags_2 |= 0x80;
-    }
-    SET_EBDA(ebda_seg, mouse_flag2, mouse_flags_2);
-    SET_EBDA(ebda_seg, far_call_pointer, farptr);
+   
     set_code_success(regs);
 }
 

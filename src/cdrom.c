@@ -23,13 +23,13 @@
  ****************************************************************/
 
 struct eltorito_s CDEmu VARLOW = { .size=sizeof(CDEmu) };
-struct drive_s *emulated_drive_gf VARLOW;
+
 struct drive_s *cdemu_drive_gf VARFSEG;
 
 static int
 cdemu_read(struct disk_op_s *op)
 {
-    struct drive_s *drive_gf = GET_LOW(emulated_drive_gf);
+    struct drive_s *drive_gf = NULL; // Set to NULL or get it from another source
     struct disk_op_s dop;
     dop.drive_fl = drive_gf;
     dop.command = op->command;
@@ -188,7 +188,7 @@ cdrom_boot(struct drive_s *drive)
     tpm_add_cdrom_catalog(MAKE_FLATPTR(GET_SEG(SS), buffer), sizeof(buffer));
 
     // Fill in el-torito cdrom emulation fields.
-    emulated_drive_gf = drive;
+   
     u8 media = buffer[0x21];
 
     u16 boot_segment = *(u16*)&buffer[0x22];
@@ -229,44 +229,17 @@ cdrom_boot(struct drive_s *drive)
         return 0;
     }
 
-    // Emulation of a floppy/harddisk requested
+     // No floppy emulation support - only harddrive emulation
     if (! CONFIG_CDROM_EMU || !cdemu_drive_gf)
         return 13;
 
-    // Set emulated drive id and increase bios installed hardware
-    // number of devices
-    if (media < 4) {
-        // Floppy emulation
-        CDEmu.emulated_drive = 0x00;
-        // XXX - get and set actual floppy count.
-        set_equipment_flags(0x41, 0x41);
+    // Harddrive emulation only
+    CDEmu.emulated_drive = 0x80;
+    SET_BDA(hdcount, GET_BDA(hdcount) + 1);
 
-        switch (media) {
-        case 0x01:  // 1.2M floppy
-            CDEmu.chs.sptcyl = 15;
-            CDEmu.chs.cyllow = 79;
-            CDEmu.chs.heads = 1;
-            break;
-        case 0x02:  // 1.44M floppy
-            CDEmu.chs.sptcyl = 18;
-            CDEmu.chs.cyllow = 79;
-            CDEmu.chs.heads = 1;
-            break;
-        case 0x03:  // 2.88M floppy
-            CDEmu.chs.sptcyl = 36;
-            CDEmu.chs.cyllow = 79;
-            CDEmu.chs.heads = 1;
-            break;
-        }
-    } else {
-        // Harddrive emulation
-        CDEmu.emulated_drive = 0x80;
-        SET_BDA(hdcount, GET_BDA(hdcount) + 1);
-
-        // Peak at partition table to get chs.
-        struct mbr_s *mbr = MAKE_FLATPTR(boot_segment, 0);
-        CDEmu.chs = mbr->partitions[0].last;
-    }
+    // Peak at partition table to get chs.
+    struct mbr_s *mbr = MAKE_FLATPTR(boot_segment, 0);
+    CDEmu.chs = mbr->partitions[0].last;
 
     // everything is ok, so from now on, the emulation is active
     CDEmu.media = media;

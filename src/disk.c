@@ -21,19 +21,8 @@
  * Return status functions
  ****************************************************************/
 
-static void
-__disk_ret(struct bregs *regs, u32 linecode, const char *fname)
-{
-    u8 code = linecode;
-    if (regs->dl < EXTSTART_HD)
-        SET_BDA(floppy_last_status, code);
-    else
-        SET_BDA(disk_last_status, code);
-    if (code)
-        __set_code_invalid(regs, linecode, fname);
-    else
-        set_code_success(regs);
-}
+
+
 
 static void
 __disk_ret_unimplemented(struct bregs *regs, u32 linecode, const char *fname)
@@ -280,19 +269,8 @@ disk_1308(struct bregs *regs, struct drive_s *drive_fl)
     nlc--;
     nlh--;
     u8 count;
-    if (regs->dl < EXTSTART_HD) {
-        // Floppy
-        count = GET_GLOBAL(FloppyCount);
 
-        if (CONFIG_CDROM_EMU && drive_fl == GET_GLOBAL(cdemu_drive_gf))
-            regs->bx = GET_LOW(CDEmu.media) * 2;
-        else
-            regs->bx = GET_FLATPTR(drive_fl->floppy_type);
-
-        // set es & di to point to 11 byte diskette param table in ROM
-        regs->es = SEG_BIOS;
-        regs->di = (u32)&diskette_param_table2;
-    } else if (regs->dl < EXTSTART_CD) {
+    if (regs->dl < EXTSTART_CD) {
         // Hard drive
         count = GET_BDA(hdcount);
         nlc--;  // last sector reserved
@@ -301,6 +279,7 @@ disk_1308(struct bregs *regs, struct drive_s *drive_fl)
         disk_ret(regs, DISK_RET_EPARAM);
         return;
     }
+
 
     if (CONFIG_CDROM_EMU && GET_LOW(CDEmu.media)) {
         u8 emudrive = GET_LOW(CDEmu.emulated_drive);
@@ -375,23 +354,12 @@ static void noinline
 disk_1315(struct bregs *regs, struct drive_s *drive_fl)
 {
     disk_ret(regs, DISK_RET_SUCCESS);
-    if (regs->dl < EXTSTART_HD || regs->dl >= EXTSTART_CD) {
-        // Floppy or cdrom
+    if (regs->dl >= EXTSTART_CD) {
+        // CDROM
         regs->ah = 1;
         return;
     }
-    // Hard drive
 
-    // Get logical geometry from table
-    struct chs_s chs = getLCHS(drive_fl);
-    u16 nlc=chs.cylinder, nlh=chs.head, nls=chs.sector;
-
-    // Compute sector count seen by int13
-    u32 lba = (u32)(nlc - 1) * (u32)nlh * (u32)nls;
-    regs->cx = lba >> 16;
-    regs->dx = lba & 0xffff;
-    regs->ah = 3; // hard disk accessible
-}
 
 static void
 disk_1316(struct bregs *regs, struct drive_s *drive_fl)
@@ -655,25 +623,6 @@ disk_13(struct bregs *regs, struct drive_s *drive_fl)
     }
 }
 
-static void
-floppy_13(struct bregs *regs, struct drive_s *drive_fl)
-{
-    // Only limited commands are supported on floppies.
-    switch (regs->ah) {
-    case 0x00:
-    case 0x01:
-    case 0x02:
-    case 0x03:
-    case 0x04:
-    case 0x05:
-    case 0x08:
-    case 0x15:
-    case 0x16:
-        disk_13(regs, drive_fl);
-        break;
-    default:   disk_13XX(regs, drive_fl); break;
-    }
-}
 
 // ElTorito - Terminate disk emu
 static void
@@ -701,16 +650,7 @@ static void
 handle_legacy_disk(struct bregs *regs, u8 extdrive)
 {
     if (! CONFIG_DRIVES) {
-        // XXX - support handle_1301 anyway?
         disk_ret(regs, DISK_RET_EPARAM);
-        return;
-    }
-
-    if (extdrive < EXTSTART_HD) {
-        struct drive_s *drive_fl = getDrive(EXTTYPE_FLOPPY, extdrive);
-        if (!drive_fl)
-            goto fail;
-        floppy_13(regs, drive_fl);
         return;
     }
 
@@ -720,14 +660,11 @@ handle_legacy_disk(struct bregs *regs, u8 extdrive)
     else
         drive_fl = getDrive(EXTTYPE_HD, extdrive - EXTSTART_HD);
     if (!drive_fl)
-        goto fail;
-    disk_13(regs, drive_fl);
-    return;
+        disk_ret(regs, DISK_RET_EPARAM);
 
-fail:
-    // XXX - support 1301/1308/1315 anyway?
-    disk_ret(regs, DISK_RET_EPARAM);
+    disk_13(regs, drive_fl);
 }
+
 
 void VISIBLE16
 handle_40(struct bregs *regs)

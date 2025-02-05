@@ -326,6 +326,8 @@ def outSections(sections, useseg=0):
         loc = section.finalloc
         if useseg:
             loc = section.finalsegloc
+        if loc is None:
+            raise ValueError(f"Error: Section {section.name} has no assigned memory location!")
         out += "%s 0x%x : { *(%s) }\n" % (section.name, loc, section.name)
     return out
 

@@ -9,7 +9,6 @@
 #include "config.h" // CONFIG_*
 #include "output.h" // dprintf, warn_noalloc
 #include "malloc.h" // malloc_fseg
-#include "ps2port.h" // ATKBD_CMD_GETID
 #include "usb.h" // usb_ctrlrequest
 #include "usb-hid.h" // usb_keyboard_setup
 #include "util.h" // process_key
@@ -369,24 +368,6 @@ usb_kbd_active(void)
     return GET_GLOBAL(keyboards) != NULL;
 }
 
-// Handle a ps2 style keyboard command.
-inline int
-usb_kbd_command(int command, u8 *param)
-{
-    if (! CONFIG_USB_KEYBOARD)
-        return -1;
-    dprintf(9, "usb keyboard cmd=%x\n", command);
-    switch (command) {
-    case ATKBD_CMD_GETID:
-        // Return the id of a standard AT keyboard.
-        param[0] = 0xab;
-        param[1] = 0x83;
-        return 0;
-    default:
-        return -1;
-    }
-}
-
 
 /****************************************************************
  * Mouse events
@@ -436,41 +417,6 @@ usb_mouse_active(void)
         return 0;
 
     return GET_GLOBAL(mice) != NULL;
-}
-
-// Handle a ps2 style mouse command.
-inline int
-usb_mouse_command(int command, u8 *param)
-{
-    if (! CONFIG_USB_MOUSE)
-        return -1;
-    dprintf(9, "usb mouse cmd=%x\n", command);
-    switch (command) {
-    case PSMOUSE_CMD_ENABLE:
-    case PSMOUSE_CMD_DISABLE:
-    case PSMOUSE_CMD_SETSCALE11:
-        return 0;
-    case PSMOUSE_CMD_SETSCALE21:
-    case PSMOUSE_CMD_SETRATE:
-    case PSMOUSE_CMD_SETRES:
-        // XXX
-        return 0;
-    case PSMOUSE_CMD_RESET_BAT:
-    case PSMOUSE_CMD_GETID:
-        // Return the id of a standard AT mouse.
-        param[0] = 0xaa;
-        param[1] = 0x00;
-        return 0;
-
-    case PSMOUSE_CMD_GETINFO:
-        param[0] = 0x00;
-        param[1] = 4;
-        param[2] = 100;
-        return 0;
-
-    default:
-        return -1;
-    }
 }
 
 // Check for USB events pending - called periodically from timer interrupt.

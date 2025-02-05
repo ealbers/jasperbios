@@ -8,7 +8,7 @@
 #include "biosvar.h" // GET_BDA
 #include "bregs.h" // struct bregs
 #include "config.h" // CONFIG_*
-#include "hw/ps2port.h" // ps2_kbd_command
+
 #include "hw/usb-hid.h" // usb_kbd_command
 #include "output.h" // debug_enter
 #include "stacks.h" // yield
@@ -107,9 +107,9 @@ dequeue_key(struct bregs *regs, int incr, int extended)
 static int
 kbd_command(int command, u8 *param)
 {
-    if (usb_kbd_active())
+   
         return usb_kbd_command(command, param);
-    return ps2_kbd_command(command, param);
+    
 }
 
 // read keyboard input
@@ -162,13 +162,9 @@ handle_1609(struct bregs *regs)
 static void noinline
 handle_160a(struct bregs *regs)
 {
-    u8 param[2];
-    int ret = kbd_command(ATKBD_CMD_GETID, param);
-    if (ret) {
+    
         regs->bx = 0;
-        return;
-    }
-    regs->bx = (param[1] << 8) | param[0];
+        
 }
 
 // read MF-II keyboard input
@@ -224,22 +220,7 @@ handle_16XX(struct bregs *regs)
     warn_unimplemented(regs);
 }
 
-static void noinline
-set_leds(void)
-{
-    u8 shift_flags = (GET_BDA(kbd_flag0) >> 4) & 0x07;
-    u8 kbd_led = GET_BDA(kbd_led);
-    u8 led_flags = kbd_led & 0x07;
-    if (shift_flags == led_flags)
-        return;
 
-    int ret = kbd_command(ATKBD_CMD_SETLEDS, &shift_flags);
-    if (ret)
-        // Error
-        return;
-    kbd_led = (kbd_led & ~0x07) | shift_flags;
-    SET_BDA(kbd_led, kbd_led);
-}
 
 // INT 16h Keyboard Service Entry Point
 void VISIBLE16
@@ -249,8 +230,7 @@ handle_16(struct bregs *regs)
     if (! CONFIG_KEYBOARD)
         return;
 
-    // XXX - set_leds should be called from irq handler
-    set_leds();
+
 
     switch (regs->ah) {
     case 0x00: handle_1600(regs); break;
@@ -391,22 +371,7 @@ u16 ascii_to_keycode(u8 ascii)
 }
 
 // Handle a ps2 style scancode read from the keyboard.
-static void
-kbd_set_flag(int key_release, u16 set_bit0, u8 set_bit1, u16 toggle_bit)
-{
-    u16 flags0 = GET_BDA(kbd_flag0);
-    u8 flags1 = GET_BDA(kbd_flag1);
-    if (key_release) {
-        flags0 &= ~set_bit0;
-        flags1 &= ~set_bit1;
-    } else {
-        flags0 ^= toggle_bit;
-        flags0 |= set_bit0;
-        flags1 |= set_bit1;
-    }
-    SET_BDA(kbd_flag0, flags0);
-    SET_BDA(kbd_flag1, flags1);
-}
+
 
 static void
 kbd_ctrl_break(int key_release)
@@ -476,44 +441,38 @@ __process_key(u8 scancode)
     // Check for special keys
     switch (scancode) {
     case 0x3a: /* Caps Lock */
-        kbd_set_flag(key_release, KF0_CAPS, 0, KF0_CAPSACTIVE);
+       
         return;
     case 0x2a: /* L Shift */
         if (flags1 & KF1_LAST_E0)
             // Ignore fake shifts
             return;
-        kbd_set_flag(key_release, KF0_LSHIFT, 0, 0);
+      
         return;
     case 0x36: /* R Shift */
         if (flags1 & KF1_LAST_E0)
             // Ignore fake shifts
             return;
-        kbd_set_flag(key_release, KF0_RSHIFT, 0, 0);
+     
         return;
     case 0x1d: /* Ctrl */
-        if (flags1 & KF1_LAST_E0)
-            kbd_set_flag(key_release, KF0_CTRLACTIVE, KF1_RCTRL, 0);
-        else
-            kbd_set_flag(key_release, KF0_CTRLACTIVE | KF0_LCTRL, 0, 0);
+      
+           
         return;
     case 0x38: /* Alt */
-        if (flags1 & KF1_LAST_E0)
-            kbd_set_flag(key_release, KF0_ALTACTIVE, KF1_RALT, 0);
-        else
-            kbd_set_flag(key_release, KF0_ALTACTIVE | KF0_LALT, 0, 0);
+       
         return;
     case 0x45: /* Num Lock */
         if (flags1 & KF1_LAST_E1)
             // XXX - pause key.
             return;
-        kbd_set_flag(key_release, KF0_NUM, 0, KF0_NUMACTIVE);
-        return;
+       
     case 0x46: /* Scroll Lock */
         if (flags1 & KF1_LAST_E0) {
             kbd_ctrl_break(key_release);
             return;
         }
-        kbd_set_flag(key_release, KF0_SCROLL, 0, KF0_SCROLLACTIVE);
+        
         return;
 
     case 0x37: /* * */

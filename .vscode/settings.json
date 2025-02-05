@@ -1,5 +1,9 @@
 {
     "[m68k]": {
         "editor.rulers": []
+    },
+    "files.associations": {
+        "pic.h": "c",
+        "usb.h": "c"
     }
 }

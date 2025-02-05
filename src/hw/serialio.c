@@ -78,8 +78,7 @@ serial_debug(char c)
 void
 serial_debug_putc(char c)
 {
-    if (c == '\n')
-        serial_debug('\r');
+    
     serial_debug(c);
 }
 

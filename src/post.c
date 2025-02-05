@@ -11,9 +11,7 @@
 #include "config.h" // CONFIG_*
 #include "e820map.h" // e820_add
 #include "fw/paravirt.h" // qemu_cfg_preinit
-#include "fw/xen.h" // xen_preinit
 #include "hw/pic.h" // pic_setup
-#include "hw/ps2port.h" // ps2port_setup
 #include "hw/rtc.h" // rtc_write
 #include "hw/serialio.h" // serial_debug_preinit
 #include "hw/usb.h" // usb_setup
@@ -127,7 +125,6 @@ void
 device_hardware_setup(void)
 {
     usb_setup();
-    ps2port_setup();
     block_setup();
     lpt_setup();
     serial_setup();
@@ -326,8 +323,6 @@ handle_post(void)
     serial_debug_preinit();
     debug_banner();
 
-    // Check if we are running under Xen.
-    xen_preinit();
 
     // Allow writes to modify bios area (0xf0000)
     make_bios_writable();

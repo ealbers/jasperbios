@@ -361,22 +361,6 @@ int bootprio_find_ata_device(struct pci_device *pci, int chanid, int slave)
     return find_prio(desc);
 }
 
-int bootprio_find_fdc_device(struct pci_device *pci, int port, int fdid)
-{
-    if (CONFIG_CSM)
-        return csm_bootprio_fdc(pci, port, fdid);
-    if (!CONFIG_BOOTORDER)
-        return -1;
-    if (!pci)
-        // support only pci machine for now
-        return -1;
-    // Find floppy - for example: /pci@i0cf8/isa@1/fdc@03f1/floppy@0
-    char desc[256], *p;
-    p = build_pci_path(desc, sizeof(desc), "isa", pci);
-    snprintf(p, desc+sizeof(desc)-p, "/fdc@%04x/floppy@%x", port, fdid);
-    return find_prio(desc);
-}
-
 int bootprio_find_pci_rom(struct pci_device *pci, int instance)
 {
     if (!CONFIG_BOOTORDER)
@@ -453,14 +437,12 @@ int bootprio_find_usb(struct usbdevice_s *usbdev, int lun)
  ****************************************************************/
 
 static int BootRetryTime;
-static int CheckFloppySig = 1;
-
 #define DEFAULT_PRIO           9999
 
-static int DefaultFloppyPrio = 101;
 static int DefaultCDPrio     = 102;
 static int DefaultHDPrio     = 103;
 static int DefaultBEVPrio    = 104;
+
 
 void
 boot_init(void)
@@ -468,26 +450,23 @@ boot_init(void)
     if (! CONFIG_BOOT)
         return;
 
-    if (CONFIG_QEMU) {
-        // On emulators, get boot order from nvram.
-        if (rtc_read(CMOS_BIOS_BOOTFLAG1) & 1)
-            CheckFloppySig = 0;
-        u32 bootorder = (rtc_read(CMOS_BIOS_BOOTFLAG2)
-                         | ((rtc_read(CMOS_BIOS_BOOTFLAG1) & 0xf0) << 4));
-        DefaultFloppyPrio = DefaultCDPrio = DefaultHDPrio
-            = DefaultBEVPrio = DEFAULT_PRIO;
-        int i;
-        for (i=101; i<104; i++) {
-            u32 val = bootorder & 0x0f;
-            bootorder >>= 4;
-            switch (val) {
-            case 1: DefaultFloppyPrio = i; break;
-            case 2: DefaultHDPrio = i;     break;
-            case 3: DefaultCDPrio = i;     break;
-            case 4: DefaultBEVPrio = i;    break;
-            }
+   if (CONFIG_QEMU) {
+    // On emulators, get boot order from nvram.
+    u32 bootorder = (rtc_read(CMOS_BIOS_BOOTFLAG2)
+                     | ((rtc_read(CMOS_BIOS_BOOTFLAG1) & 0xf0) << 4));
+    DefaultCDPrio = DefaultHDPrio = DefaultBEVPrio = DEFAULT_PRIO;
+    int i;
+    for (i=101; i<104; i++) {
+        u32 val = bootorder & 0x0f;
+        bootorder >>= 4;
+        switch (val) {
+        case 2: DefaultHDPrio = i;     break;
+        case 3: DefaultCDPrio = i;     break;
+        case 4: DefaultBEVPrio = i;    break;
         }
     }
+}
+
 
     BootRetryTime = romfile_loadint("etc/boot-fail-wait", 60*1000);
 
@@ -513,7 +492,7 @@ struct bootentry_s {
 };
 static struct hlist_head BootList VARVERIFY32INIT;
 
-#define IPL_TYPE_FLOPPY      0x01
+
 #define IPL_TYPE_HARDDISK    0x02
 #define IPL_TYPE_CDROM       0x03
 #define IPL_TYPE_CBFS        0x20
@@ -581,13 +560,6 @@ boot_add_bcv(u16 seg, u16 ip, u16 desc, int prio)
     bootentry_add(IPL_TYPE_BCV, defPrio(prio, DefaultHDPrio)
                   , SEGOFF(seg, ip).segoff
                   , desc ? MAKE_FLATPTR(seg, desc) : "Legacy option rom");
-}
-
-void
-boot_add_floppy(struct drive_s *drive, const char *desc, int prio)
-{
-    bootentry_add(IPL_TYPE_FLOPPY, defPrio(prio, DefaultFloppyPrio)
-                  , (u32)drive, desc);
 }
 
 void
@@ -800,14 +772,12 @@ struct bev_s {
 };
 static struct bev_s BEV[20];
 static int BEVCount;
-static int HaveHDBoot, HaveFDBoot;
+static int HaveHDBoot;
 
 static void
 add_bev(int type, u32 vector)
 {
     if (type == IPL_TYPE_HARDDISK && HaveHDBoot++)
-        return;
-    if (type == IPL_TYPE_FLOPPY && HaveFDBoot++)
         return;
     if (BEVCount >= ARRAY_SIZE(BEV))
         return;
@@ -816,6 +786,7 @@ add_bev(int type, u32 vector)
     bev->vector = vector;
 }
 
+// Prepare for boot - show menu and run bcvs.
 // Prepare for boot - show menu and run bcvs.
 void
 bcv_prepboot(void)
@@ -835,10 +806,6 @@ bcv_prepboot(void)
             call_bcv(pos->vector.seg, pos->vector.offset);
             add_bev(IPL_TYPE_HARDDISK, 0);
             break;
-        case IPL_TYPE_FLOPPY:
-            map_floppy_drive(pos->drive);
-            add_bev(IPL_TYPE_FLOPPY, 0);
-            break;
         case IPL_TYPE_HARDDISK:
             map_hd_drive(pos->drive);
             add_bev(IPL_TYPE_HARDDISK, 0);
@@ -852,10 +819,10 @@ bcv_prepboot(void)
         }
     }
 
-    // If nothing added a floppy/hd boot - add it manually.
-    add_bev(IPL_TYPE_FLOPPY, 0);
+    // If nothing added a hard drive boot - add it manually.
     add_bev(IPL_TYPE_HARDDISK, 0);
 }
+
 
 
 /****************************************************************
@@ -983,22 +950,15 @@ boot_fail(void)
 }
 
 // Determine next boot method and attempt a boot using it.
+// Determine next boot method and attempt a boot using it.
 static void
 do_boot(int seq_nr)
 {
-    if (! CONFIG_BOOT)
-        panic("Boot support not compiled in.\n");
-
     if (seq_nr >= BEVCount)
         boot_fail();
 
-    // Boot the given BEV type.
     struct bev_s *ie = &BEV[seq_nr];
     switch (ie->type) {
-    case IPL_TYPE_FLOPPY:
-        printf("Booting from Floppy...\n");
-        boot_disk(0x00, CheckFloppySig);
-        break;
     case IPL_TYPE_HARDDISK:
         printf("Booting from Hard Disk...\n");
         boot_disk(0x80, 1);
@@ -1016,13 +976,9 @@ do_boot(int seq_nr)
         boot_fail();
         break;
     }
-
-    // Boot failed: invoke the boot recovery function
-    struct bregs br;
-    memset(&br, 0, sizeof(br));
-    br.flags = F_IF;
-    call16_int(0x18, &br);
 }
+
+
 
 int BootSequence VARLOW = -1;
 

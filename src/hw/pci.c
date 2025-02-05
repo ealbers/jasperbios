@@ -16,6 +16,11 @@
 
 static u32 mmconfig;
 
+
+
+void handle_pcibios(struct bregs *regs) { set_code_unimplemented(regs, 0x1234); }
+
+
 static void *mmconfig_addr(u16 bdf, u32 addr)
 {
     return (void*)(mmconfig + ((u32)bdf << 12) + addr);
